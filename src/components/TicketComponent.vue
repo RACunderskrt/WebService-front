@@ -52,9 +52,10 @@
 					:key="seat.id"
 					class="seat"
 					:class="seat.occupied ? 'seat--taken' : 'seat--free'"
-					:title="seat.occupied ? `${seat.clientFirstname} ${seat.clientName}` : 'Available'"
+					:title="seat.occupied ? `${seat.clientFirstname} ${seat.clientName}` : 'Click to book'"
+					@click="() => seat.occupied ? emit('delete-seat', seat) : emit('book-seat', seat)"
 				>
-				{{ seat.label }}
+					{{ seat.label }}
 				</div>
 			</div>
 		</div>
@@ -71,13 +72,12 @@
 <script setup>
 import { computed } from 'vue'
 
-// ── Props ────────────────────────────────────────────────────────────────────
+// ── Props & emits ─────────────────────────────────────────────────────────────
 const props = defineProps({
 	flight: {
 		type: Object,
 		required: true,
 	},
-	// Array of siege objects already filtered for this flight
 	seats: {
 		type: Array,
 		required: true,
@@ -88,7 +88,10 @@ const props = defineProps({
 	},
 })
 
-// ── Computed ─────────────────────────────────────────────────────────────────
+// Emits the clicked seat object up to TicketView which handles the POST
+const emit = defineEmits(['book-seat', 'delete-seat'])
+
+// ── Computed ──────────────────────────────────────────────────────────────────
 const availableSeats = computed(() => props.seats.filter(s => !s.occupied).length)
 
 const duration = computed(() => {
@@ -100,17 +103,30 @@ const duration = computed(() => {
 
 const seatBadgeClass = computed(() => {
 	const ratio = availableSeats.value / props.seats.length
-	if (ratio === 0)   return 'badge--full'
-	if (ratio < 0.35)  return 'badge--low'
+	if (ratio === 0)  return 'badge--full'
+	if (ratio < 0.35) return 'badge--low'
 	return 'badge--ok'
 })
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 const formatDate = (iso) => new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
-
 const formatTime = (iso) => new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 </script>
 
 <style scoped>
-@import "src/style/style.css"
+@import "src/style/style.css";
+
+/* Free seats are now clickable — show pointer */
+.seat--free {
+	cursor: pointer;
+}
+.seat--free:hover {
+	transform: scale(1.18);
+	box-shadow: 0 0 0 2px var(--go);
+}
+
+/* Taken seats are not clickable */
+.seat--taken {
+	cursor: not-allowed;
+}
 </style>

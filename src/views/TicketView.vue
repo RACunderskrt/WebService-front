@@ -77,6 +77,8 @@
 					:flight="flight"
 					:seats="getSeats(flight)"
 					:company-name="getCompanyName(flight.companyId)"
+					@book-seat="bookSeat"
+					@delete-seat="deleteSeat"
 				/>
 			</div>
 		</main>
@@ -149,6 +151,46 @@ async function getFlights(){
 	})
 	vols.value = await res.json();
 	console.log("vols.value", vols.value)
+}
+
+async function deleteSeat(seat) {
+	console.log("delete")
+	try {
+		const res = await fetch(`http://localhost:3000/seat/${seat.id}`, {
+			method: 'DELETE',
+			headers: {
+				Authorization: `Bearer ${keycloak.token}`,
+			},
+		})
+		if (!res.ok) throw new Error(`Server error: ${res.status}`)
+		await getSeatsAPI()
+	} catch (err) {
+		console.error('Failed to delete seat:', err)
+	}
+}
+
+async function bookSeat(seat) {
+	console.log("book")
+	try {
+		const res = await fetch('http://localhost:3000/seat', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${keycloak.token}`,
+			},
+			body: JSON.stringify({
+				id:              seat.id,
+				flightId:        seat.flightId,
+				label:           seat.label,
+				clientName:      user.value.name.split(" ")[1],
+				clientFirstname: user.value.name.split(" ")[0],
+			}),
+		})
+		if (!res.ok) throw new Error(`Server error: ${res.status}`)
+		await getSeatsAPI()
+	} catch (err) {
+		console.error('Failed to book seat:', err)
+	}
 }
 
 async function getSeatsAPI(){
