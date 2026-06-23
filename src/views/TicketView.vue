@@ -173,7 +173,7 @@ async function bookSeat(seat) {
 	console.log("book")
 	try {
 		const res = await fetch('http://localhost:3000/seat', {
-			method: 'POST',
+			method: 'PUT',
 			headers: {
 				'Content-Type': 'application/json',
 				Authorization: `Bearer ${keycloak.token}`,
